@@ -22,6 +22,24 @@
     .date-time-row{margin-bottom:17px}.date-time-card{min-width:0;border:1px solid #e8ebe5;background:#fff;border-radius:13px;padding:11px}.date-time-card .label{margin:0 0 7px}.date-time-card .input{background:#fbfcfa;padding:10px}.record-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:stretch}.record-card{min-width:0;border:1px solid #e5ebe3;background:#fbfcfa;border-radius:15px;padding:13px;display:flex;flex-direction:column}.record-card-heading{display:flex;align-items:center;gap:9px;margin-bottom:14px}.record-icon{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:11px;background:#e9f2e6;color:#315d49;font-size:18px}.trip-icon{font-weight:800}.record-card-heading h3{font-size:12px;margin:0;color:#254539;line-height:1.3}.record-card-heading p{font-size:10px;color:#828e85;margin:4px 0 0;line-height:1.35}.record-card .field{margin-bottom:12px}.record-hint{font-size:9px;line-height:1.4;color:#87928a;margin:-2px 0 12px}.record-card .optional{font-size:9px;text-align:right}.record-card .input{padding:10px 11px;font-size:13px}.record-card .usage-tip{margin:0 0 12px}.record-save{margin-top:auto;min-height:42px;padding:10px 9px;font-size:11px}.notes-field{margin-top:16px}
     @media(max-width:520px){.record-grid{grid-template-columns:1fr}.record-card{padding:13px}.date-time-card{padding:9px}.date-time-card .input{font-size:12px}}
   </style>
+  <style id="history-edit-styles">
+    .entry-edit{border:1px solid #dce7dc;background:#f5f8f3;color:#315d49;border-radius:8px;padding:6px 10px;margin-top:7px;font-size:10px;font-weight:700;min-height:32px}
+    .entry-edit:hover{background:#eaf2e7}
+    .edit-dialog{width:min(560px,calc(100vw - 24px));max-height:min(90dvh,850px);padding:0;border:1px solid #e5ebe3;border-radius:20px;color:var(--ink);box-shadow:0 24px 80px rgba(15,40,30,.22);overflow:auto}
+    .edit-dialog::backdrop{background:rgba(18,37,30,.48);backdrop-filter:blur(3px)}
+    .edit-form{padding:20px;display:grid;gap:14px}
+    .edit-dialog-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:2px}
+    .edit-dialog-head h2{font-size:19px;letter-spacing:-.04em;margin:0}
+    .edit-dialog-head p{font-size:12px;color:var(--muted);margin:5px 0 0}
+    .edit-close{width:34px;height:34px;border:0;border-radius:10px;background:#f1f4ef;color:#45564d;font-size:20px}
+    .edit-fields{border:1px solid #e7ece5;background:#fbfcfa;border-radius:14px;padding:13px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .edit-fields .field{margin:0}.edit-fields .field.full{grid-column:1/-1}
+    .edit-form .field{margin:0}.edit-form .label{margin-bottom:7px}
+    .edit-form input,.edit-form select,.edit-form textarea{font-size:14px}
+    .edit-actions{display:flex;justify-content:flex-end;gap:8px;padding-top:2px}
+    .edit-cancel{border:1px solid #e4e9e1;background:#fff;color:#4b5e53;border-radius:11px;padding:11px 15px;font-weight:650}
+    @media(max-width:520px){.edit-form{padding:16px;gap:12px}.edit-fields{padding:11px;gap:9px}.entry-edit{padding:6px 9px}.edit-dialog{border-radius:17px}}
+  </style>
 </head>
 <body>
   <main class="shell">
@@ -89,6 +107,31 @@
     <details class="howto"><summary>Como usar o painel</summary><ol><li>Escolha a pessoa e o carro.</li><li>Preencha data, hora, pessoa e carro.</li><li>Use o cartão de abastecimento ou o de trajeto e salve separadamente.</li></ol><p>O abastecimento vira crédito da pessoa escolhida. O cartão de trajeto debita <b>km ÷ 11 × preço por litro</b>.</p></details>
     <nav class="mobile-tabs" aria-label="Navegação rápida"><a href="#novo-registro">Registrar</a><a href="#historico">Histórico</a></nav>
   </main>
+  <dialog class="edit-dialog" id="editDialog" aria-labelledby="editDialogTitle">
+    <form class="edit-form" id="editForm">
+      <div class="edit-dialog-head"><div><h2 id="editDialogTitle">Editar lançamento</h2><p>Corrija os dados e salve a atualização.</p></div><button class="edit-close" id="closeEdit" type="button" aria-label="Fechar">×</button></div>
+      <div class="row">
+        <div class="field"><label class="label" for="editPerson">Quem usou ou abasteceu?</label><select id="editPerson"><option>Guilherme</option><option>Juliana</option><option>Beto</option><option>Rafael</option></select></div>
+        <div class="field"><label class="label" for="editCar">Qual carro?</label><select id="editCar"><option>Ford Ka</option><option>C3</option></select></div>
+      </div>
+      <div class="row">
+        <div class="field"><label class="label" for="editDate">Data</label><input class="input" id="editDate" type="date" required></div>
+        <div class="field"><label class="label" for="editTime">Hora</label><input class="input" id="editTime" type="time" required></div>
+      </div>
+      <div class="field"><label class="label" for="editType">Tipo de lançamento</label><select id="editType"><option value="trajeto">Trajeto</option><option value="abastecimento">Abastecimento</option><option value="ambos">Abastecimento e trajeto</option></select></div>
+      <div class="edit-fields" id="editFuelFields">
+        <div class="field"><label class="label" for="editLiters">Litros abastecidos</label><input class="input" id="editLiters" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Ex.: 25"></div>
+        <div class="field"><label class="label" for="editAmount">Valor pago (R$)</label><input class="input" id="editAmount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Ex.: 100"></div>
+      </div>
+      <div class="edit-fields" id="editTripFields">
+        <div class="field"><label class="label" for="editDistance">Distância rodada (km)</label><input class="input" id="editDistance" type="number" min="0.1" step="0.1" inputmode="decimal" placeholder="Ex.: 25"></div>
+        <div class="field"><label class="label" for="editOdometer">Km no painel</label><input class="input" id="editOdometer" type="number" min="0" step="1" inputmode="numeric" placeholder="Ex.: 48250"></div>
+      </div>
+      <div class="field"><label class="label" for="editPrice">Preço por litro (R$/L)</label><input class="input" id="editPrice" type="number" min="0.01" step="0.01" inputmode="decimal"></div>
+      <div class="field"><label class="label" for="editNotes">Observação</label><textarea id="editNotes" placeholder="Ex.: posto ou destino…"></textarea></div>
+      <div class="edit-actions"><button class="edit-cancel" id="cancelEdit" type="button">Cancelar</button><button class="primary" type="submit">Salvar alterações</button></div>
+    </form>
+  </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script>
     (()=>{
@@ -119,7 +162,7 @@
         const shown=entries.filter(e=>(!person||e.responsavel===person)&&(!car||e.carro===car)&&(!type||(type==='abastecimento'?e.tipo!=='trajeto':e.tipo!=='abastecimento'))).sort((a,b)=>b.data.localeCompare(a.data));
         if(!shown.length){list.innerHTML=`<div class="empty"><div class="empty-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 13h18l-1.6-5.3a2 2 0 0 0-1.9-1.4H6.5a2 2 0 0 0-1.9 1.4L3 13Zm2 0v5m14-5v5M5 16h14"/><circle cx="7.5" cy="14.5" r=".8" fill="currentColor"/><circle cx="16.5" cy="14.5" r=".8" fill="currentColor"/></svg></div><h3>${entries.length?'Nada por aqui com esses filtros':'A garagem começa com vocês'}</h3><p>${entries.length?'Tenta mudar os filtros pra ver outros registros.':'Quando alguém registrar um abastecimento ou trajeto, ele aparece aqui.'}</p></div>`;return}
         list.innerHTML=shown.map(e=>{const v=valuesFor(e),label=e.tipo==='ambos'?'Abastecimento e trajeto':e.tipo==='trajeto'?'Trajeto':'Abastecimento',details=[];if(e.litros)details.push(`${num(e.litros).toLocaleString('pt-BR')} L`);if(e.odometro)details.push(`odômetro ${num(e.odometro).toLocaleString('pt-BR')} km`);if(e.observacoes)details.push(escapeHtml(e.observacoes));let value='',sub='';if(e.tipo==='abastecimento'){value=`<span class="credit">+ ${money(v.credit)}</span>`;sub=`${details.join(' · ')||'crédito de abastecimento'} · ${money(v.price)}/L`}else if(e.tipo==='trajeto'){value=v.dist===null?'—':`<span class="debit">− ${money(v.debit)}</span>`;sub=v.dist===null?'primeiro odômetro; aguardando próxima leitura':`${v.dist.toLocaleString('pt-BR')} km · ${money(v.price)}/L`}else{value=`<span class="credit">+ ${money(v.credit)}</span>`;sub=`crédito; débito do trajeto: ${v.dist===null?'sem distância calculada':`− ${money(v.debit)} (${v.dist.toLocaleString('pt-BR')} km)`}`}
-          return `<div class="entry"><div class="entry-icon ${e.tipo==='trajeto'?'trip':''}">${icon(e.tipo)}</div><div><div class="entry-name">${escapeHtml(e.responsavel)} · ${escapeHtml(e.carro)}</div><div class="entry-meta">${label} · ${dateFmt(e.data)}${details.length?' · '+details.join(' · '):''}</div></div><div class="entry-value">${value}<small class="entry-detail">${sub}</small></div></div>`}).join('');
+          return `<div class="entry"><div class="entry-icon ${e.tipo==='trajeto'?'trip':''}">${icon(e.tipo)}</div><div><div class="entry-name">${escapeHtml(e.responsavel)} · ${escapeHtml(e.carro)}</div><div class="entry-meta">${label} · ${dateFmt(e.data)}${details.length?' · '+details.join(' · '):''}</div></div><div class="entry-value">${value}<small class="entry-detail">${sub}</small><button class="entry-edit" type="button" data-edit-index="${entries.indexOf(e)}">Editar</button></div></div>`}).join('');
         document.querySelectorAll('[data-person-link]').forEach(a=>a.addEventListener('click',()=>{document.querySelector('#filterPerson').value=a.dataset.personLink;render()}));
       }
       function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -138,6 +181,25 @@
         try{const Tesseract=await loadTesseract();worker=await Tesseract.createWorker('por',1,{logger:m=>{if(m.status){const percent=typeof m.progress==='number'?Math.round(m.progress*100):null;photoStatusText.textContent=percent===null?`Lendo a imagem: ${m.status}…`:`Lendo a imagem: ${percent}%`;if(percent!==null)photoProgress.value=m.progress}}});const result=await worker.recognize(file);const text=result.data.text||'';let fields={};if(kind==='receipt'){fields=readReceipt(text)}else{const odometer=readOdometer(text);if(odometer)fields.odometro=odometer}
           let filled=0;for(const [key,value] of Object.entries(fields)){if(key==='price'||key==='data')continue;const el=document.querySelector(`#${key}`);if(el&&value){el.value=String(value);el.classList.add('autofilled');filled++}}if(fields.data){const [date,time]=fields.data.split('T');if(date){document.querySelector('#data').value=date;document.querySelector('#data').classList.add('autofilled');filled++}if(time){document.querySelector('#hora').value=time;document.querySelector('#hora').classList.add('autofilled');filled++}}if(fields.price){const target=kind==='receipt'?fuelPrice:entryPrice;target.value=String(fields.price);target.classList.add('autofilled');filled++}photoProgress.value=1;const confidence=Math.round(result.data.confidence||0);photoStatusText.textContent=filled?`Achei ${filled} campo(s) · confiança geral ${confidence}%. Confere os campos destacados antes de salvar.`:'Não encontrei valores claros. Tenta uma foto mais nítida ou preenche manualmente.';if(!filled)toastMsg('Não achei campos legíveis nessa foto.');
         }catch(error){photoStatusText.textContent=error.message||'A leitura falhou. Tenta outra foto ou preenche manualmente.';toastMsg('Não consegui ler a foto.')}finally{if(worker)await worker.terminate().catch(()=>{});URL.revokeObjectURL(url);scanBusy=false;document.querySelectorAll('[data-photo-kind]').forEach(b=>b.disabled=false);document.querySelector('#entryForm').scrollIntoView({behavior:'smooth',block:'start'})}}
+      const editDialog=document.querySelector('#editDialog'),editForm=document.querySelector('#editForm');
+      const editType=document.querySelector('#editType'),editFuelFields=document.querySelector('#editFuelFields'),editTripFields=document.querySelector('#editTripFields');
+      function updateEditFields(){const kind=editType.value;editFuelFields.hidden=kind==='trajeto';editTripFields.hidden=kind==='abastecimento'}
+      editType.addEventListener('change',updateEditFields);
+      function openEdit(index){const entry=entries[index];if(!entry)return;editDialog.dataset.index=String(index);const [date,time='00:00']=String(entry.data||'').split('T');
+        document.querySelector('#editPerson').value=entry.responsavel||'Guilherme';document.querySelector('#editCar').value=entry.carro||'Ford Ka';
+        document.querySelector('#editDate').value=date||'';document.querySelector('#editTime').value=(time||'00:00').slice(0,5);
+        editType.value=['trajeto','abastecimento','ambos'].includes(entry.tipo)?entry.tipo:'abastecimento';
+        document.querySelector('#editLiters').value=entry.litros||'';document.querySelector('#editAmount').value=entry.valor||'';
+        document.querySelector('#editDistance').value=entry.distancia||'';document.querySelector('#editOdometer').value=entry.odometro||'';
+        document.querySelector('#editPrice').value=entry.price||priceNow();document.querySelector('#editNotes').value=entry.observacoes||'';
+        updateEditFields();editDialog.showModal()}
+      list.addEventListener('click',ev=>{const button=ev.target.closest('[data-edit-index]');if(button)openEdit(Number(button.dataset.editIndex))});
+      document.querySelector('#closeEdit').addEventListener('click',()=>editDialog.close());document.querySelector('#cancelEdit').addEventListener('click',()=>editDialog.close());
+      editForm.addEventListener('submit',ev=>{ev.preventDefault();const index=Number(editDialog.dataset.index),entry=entries[index];if(!entry)return;const kind=editType.value,hasFuel=kind!=='trajeto',hasTrip=kind!=='abastecimento';
+        const liters=document.querySelector('#editLiters').value,amount=document.querySelector('#editAmount').value,distance=document.querySelector('#editDistance').value,odometer=document.querySelector('#editOdometer').value;
+        if(hasFuel&&!liters&&!amount){toastMsg('Informe os litros ou o valor pago.');return}if(hasTrip&&!distance&&!odometer){toastMsg('Informe a distância ou o km do painel.');return}
+        Object.assign(entry,{responsavel:document.querySelector('#editPerson').value,carro:document.querySelector('#editCar').value,data:`${document.querySelector('#editDate').value}T${document.querySelector('#editTime').value}`,tipo:kind,litros:hasFuel?liters:'',valor:hasFuel?amount:'',distancia:hasTrip?distance:'',odometro:hasTrip?odometer:'',price:num(document.querySelector('#editPrice').value)||priceNow(),observacoes:document.querySelector('#editNotes').value.trim()});
+        localStorage.setItem(KEY,JSON.stringify(entries));editDialog.close();render();toastMsg('Lançamento atualizado.')});
       document.querySelectorAll('[data-photo-kind]').forEach(button=>button.addEventListener('click',()=>document.querySelector(button.dataset.photoKind==='receipt'?'#receiptPhoto':'#odometerPhoto').click()));
       document.querySelector('#receiptPhoto').addEventListener('change',ev=>{if(ev.target.files?.[0])scanPhoto(ev.target.files[0],'receipt');ev.target.value=''})
       document.querySelector('#odometerPhoto').addEventListener('change',ev=>{if(ev.target.files?.[0])scanPhoto(ev.target.files[0],'odometer');ev.target.value=''})
