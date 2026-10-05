@@ -15,3 +15,6 @@ Os registros que já estavam salvos no navegador são enviados uma vez ao banco 
 - Triumph Speed 400 (mostrada como “Triumph”): consumo configurável; fica em branco até a média ser informada
 
 O preço por litro e as médias de consumo são configurações compartilhadas e podem ser editados no painel.
+## Preenchimento por voz
+
+No formulário, a pessoa pode segurar o botão de voz enquanto fala e soltar para preencher os campos, ou tocar para iniciar e tocar novamente para encerrar. O navegador transcreve em português; pessoa, veículo, valor, litros, distância e hodômetro podem ser reconhecidos. A fala também fica como observação editável. O registro só é gravado depois que a pessoa confere e toca em salvar. O áudio não é enviado nem armazenado pelo app; o reconhecimento pode depender do serviço de voz e da conexão do navegador.
