@@ -6,7 +6,10 @@
   <meta name="theme-color" content="#f5f5f0">
   <link rel="icon" type="image/svg+xml" href="favicon.svg?v=1">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=1">
-  <meta name="description" content="Painel familiar para registrar abastecimentos e usos dos carros.">
+  <meta name="description" content="Painel compartilhado da família para registrar trajetos e abastecimentos dos veículos.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Garagem">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Garagem — nosso diário de bordo</title>
   <style>
     :root{--ink:#18342c;--muted:#77827b;--paper:#f5f5f0;--card:#fff;--line:#e8ebe5;--green:#174c3d;--lime:#d5ef75;--soft:#eef3e9;--orange:#ef8b55;--shadow:0 16px 48px rgba(22,49,40,.07);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);font-synthesis:none}
@@ -23,6 +26,25 @@
 
     .date-time-row{margin-bottom:17px}.date-time-card{min-width:0;border:1px solid #e8ebe5;background:#fff;border-radius:13px;padding:11px}.date-time-card .label{margin:0 0 7px}.date-time-card .input{background:#fbfcfa;padding:10px}.record-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:stretch}.record-card{min-width:0;border:1px solid #e5ebe3;background:#fbfcfa;border-radius:15px;padding:13px;display:flex;flex-direction:column}.record-card-heading{display:flex;align-items:center;gap:9px;margin-bottom:14px}.record-icon{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:11px;background:#e9f2e6;color:#315d49;font-size:18px}.trip-icon{font-weight:800}.record-card-heading h3{font-size:12px;margin:0;color:#254539;line-height:1.3}.record-card-heading p{font-size:10px;color:#828e85;margin:4px 0 0;line-height:1.35}.record-card .field{margin-bottom:12px}.record-hint{font-size:9px;line-height:1.4;color:#87928a;margin:-2px 0 12px}.record-card .optional{font-size:9px;text-align:right}.record-card .input{padding:10px 11px;font-size:13px}.record-card .usage-tip{margin:0 0 12px}.record-save{margin-top:auto;min-height:42px;padding:10px 9px;font-size:11px}.notes-field{margin-top:16px}
     @media(max-width:520px){.record-grid{grid-template-columns:1fr}.record-card{padding:13px}.date-time-card{padding:9px}.date-time-card .input{font-size:12px}}
+
+    /* Keep native date/time controls inside their cards on narrow iPhone screens. */
+    .date-time-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;min-width:0}
+    .date-time-card{min-width:0;overflow:hidden}
+    .date-time-card .input,.date-time-row input[type="date"],.date-time-row input[type="time"]{display:block;width:100%;min-width:0;max-width:100%;padding:8px 5px;font-size:12px;letter-spacing:-.025em}
+    .date-time-row input::-webkit-date-and-time-value{text-align:left;margin:0}
+    .price-card{flex-wrap:wrap;align-items:flex-start}.price-copy{min-width:0;flex:1 1 180px}.price-input-wrap{flex:none}
+    .cars{flex-wrap:wrap}
+    .efficiency-settings{flex:1 0 100%;min-width:0;border-top:1px solid #edf0e9;padding-top:12px}
+    .efficiency-inputs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:9px}
+    .efficiency-input{min-width:0;display:grid;gap:6px;color:#64746a;font-size:10px;font-weight:650}
+    .efficiency-input input{width:100%;min-width:0;border:1px solid #e5e9e2;border-radius:9px;background:#fbfcfa;padding:9px;color:var(--ink);font:inherit;font-size:14px}
+    .efficiency-input span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pending-trip{color:#9a6b35;font-size:9px;margin-top:5px;line-height:1.35}
+    .sync-pill[data-state="online"] .sync-dot{background:#4f9b68}
+    .sync-pill[data-state="offline"] .sync-dot{background:#d88657}
+    .sync-pill[data-state="syncing"] .sync-dot{background:#e6a55d}
+    @media(max-width:520px){.topbar{flex-wrap:wrap;gap:12px}.top-actions{margin-left:auto}.date-time-row{gap:7px}.date-time-card{padding:8px}.date-time-card .input,.date-time-row input[type="date"],.date-time-row input[type="time"]{padding:7px 3px;font-size:11px}.efficiency-settings{padding-top:10px}.efficiency-inputs{gap:6px}.efficiency-input{font-size:9px}.efficiency-input input{padding:8px 6px;font-size:14px}}
+    @media(max-width:360px){.shell{padding-left:10px;padding-right:10px}.form{padding-left:11px;padding-right:11px}.panel-head{padding-left:13px;padding-right:13px}.date-time-row{gap:5px}.date-time-card{padding:7px}.date-time-card .input,.date-time-row input[type="date"],.date-time-row input[type="time"]{padding:6px 2px;font-size:10px}.sync-pill{padding:7px 8px}.top-actions{gap:6px}}
   </style>
   <style id="history-edit-styles">
     .entry-edit{border:1px solid #dce7dc;background:#f5f8f3;color:#315d49;border-radius:8px;padding:6px 10px;margin-top:7px;font-size:10px;font-weight:700;min-height:32px}
@@ -47,22 +69,27 @@
   <main class="shell">
     <header class="topbar">
       <div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 13h18l-1.6-5.3a2 2 0 0 0-1.9-1.4H6.5a2 2 0 0 0-1.9 1.4L3 13Z"/><path d="M5 13v5m14-5v5M5 16h14M7 18v1m10-1v1"/><circle cx="7.5" cy="14.5" r=".8" fill="currentColor"/><circle cx="16.5" cy="14.5" r=".8" fill="currentColor"/></svg></div> Garagem da Família</div>
-      <div class="top-actions"><span class="sync-pill"><i class="sync-dot"></i><span id="syncLabel">Prévia neste aparelho</span></span><a class="share-btn" href="#compartilhar" id="shareLink" aria-label="Copiar link para compartilhar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4m-6.6 7 6.6 4.4"/></svg><span>Compartilhar</span></a></div>
+      <div class="top-actions"><span class="sync-pill"><i class="sync-dot"></i><span id="syncLabel">Conectando…</span></span><button class="share-btn" type="button" id="shareLink" aria-label="Copiar link para compartilhar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4m-6.6 7 6.6 4.4"/></svg><span>Compartilhar</span></button></div>
     </header>
     <section class="intro">
-      <div><div class="eyebrow">Diário de bordo</div><h1>Os carros da casa,<br>em um só lugar.</h1><p>Abastecimentos e trajetos organizados pra todo mundo.</p></div>
-      <div class="cars" aria-label="Carros da família"><div class="car-chip"><span>✳</span> Ford Ka</div><div class="car-chip"><span>✳</span> C3</div></div>
+      <div><div class="eyebrow">Diário de bordo</div><h1>Os veículos da casa,<br>em um só lugar.</h1><p>Abastecimentos e trajetos organizados pra todo mundo.</p></div>
+      <div class="cars" aria-label="Veículos da família"><div class="car-chip"><span aria-hidden="true">🚗</span> Ford Ka</div><div class="car-chip"><span aria-hidden="true">🚗</span> Citroen C3</div><div class="car-chip"><span aria-hidden="true">🏍️</span> Triumph</div></div>
     </section>
     <section class="stats" aria-label="Resumo">
       <article class="stat"><div class="stat-head"><span>Abastecido no mês</span><span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16M3 21h14m-9-4h4M7 7h6v5H7zM16 8h2l2 2v7a2 2 0 0 1-4 0v-4"/></svg></span></div><div class="stat-number" id="statLiters">0 L</div><div class="stat-sub">registrados neste mês</div></article>
       <article class="stat"><div class="stat-head"><span>Créditos no mês</span><span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20m5-15.5C17 4.6 14.9 3.5 12 3.5S7 5 7 7s1.8 3.2 5 4 5 2 5 4.5-2.2 4-5 4-5-1.2-5-3"/></svg></span></div><div class="stat-number" id="statCost">R$ 0</div><div class="stat-sub">somados aos saldos</div></article>
-      <article class="stat"><div class="stat-head"><span>Consumo no mês</span><span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></span></div><div class="stat-number" id="statUsage">R$ 0</div><div class="stat-sub">descontado por trajetos</div></article>
+      <article class="stat"><div class="stat-head"><span>Consumo no mês</span><span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></span></div><div class="stat-number" id="statUsage">R$ 0</div><div class="stat-sub">trajetos com consumo definido</div></article>
     </section>
-    <section class="price-card" aria-label="Preço de referência da gasolina">
+    <section class="price-card" aria-label="Configurações de combustível e consumo">
       <div class="price-copy"><div class="price-title">Preço de referência</div><div class="price-note">Sugestão ANP para Florianópolis: média de 16 postos, 27/09–03/10/2026. Referência semanal, não em tempo real.</div><a href="https://www.gov.br/anp/pt-br/assuntos/precos-e-defesa-da-concorrencia/precos/levantamento-de-precos-de-combustiveis-ultimas-semanas-pesquisadas" target="_blank" rel="noreferrer">Ver levantamento semanal da ANP ↗</a></div>
       <label class="price-input-wrap"><span>R$</span><input id="defaultPrice" type="number" min="0.01" step="0.01" inputmode="decimal" value="6.74" aria-label="Preço padrão da gasolina por litro"><small>/ litro</small></label>
+      <div class="efficiency-settings"><div class="price-title">Consumo médio por veículo</div><p class="price-note">Usado para estimar o custo de cada trajeto. A Triumph fica sem desconto calculado até definirmos o consumo.</p><div class="efficiency-inputs">
+        <label class="efficiency-input"><span>🚗 Ford Ka · km/L</span><input id="efficiencyFordKa" type="number" min="0.1" step="0.1" inputmode="decimal" aria-label="Consumo médio do Ford Ka em quilômetros por litro"></label>
+        <label class="efficiency-input"><span>🚗 Citroen C3 · km/L</span><input id="efficiencyC3" type="number" min="0.1" step="0.1" inputmode="decimal" aria-label="Consumo médio do Citroen C3 em quilômetros por litro"></label>
+        <label class="efficiency-input"><span>🏍️ Triumph · km/L</span><input id="efficiencyTriumph" type="number" min="0.1" step="0.1" inputmode="decimal" placeholder="Definir" aria-label="Consumo médio da Triumph em quilômetros por litro"></label>
+      </div></div>
     </section>
-    <section class="balance-section" aria-labelledby="balanceTitle"><div class="section-heading"><div><h2 id="balanceTitle">Saldo por pessoa</h2><p>Abastecer soma crédito; cada trajeto desconta o combustível estimado.</p></div><span class="efficiency-badge">11 km/L nos dois carros</span></div><div class="balance-grid" id="balanceCards"></div></section>
+    <section class="balance-section" aria-labelledby="balanceTitle"><div class="section-heading"><div><h2 id="balanceTitle">Saldo por pessoa</h2><p>Abastecer soma crédito; cada trajeto desconta o combustível estimado.</p></div><span class="efficiency-badge">Consumo por veículo</span></div><div class="balance-grid" id="balanceCards"></div></section>
     <section class="layout">
       <article class="panel" id="novo-registro">
         <div class="panel-head"><div><h2 class="panel-title">Novo registro</h2><p class="panel-hint">Leva menos de um minuto.</p></div><span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14m-7-7h14"/></svg></span></div>
@@ -78,7 +105,7 @@
           <div class="field"><div class="label-row"><label class="label" for="responsavel">Quem está registrando?</label></div><div class="people" id="peopleGroup">
             <label class="person"><input id="responsavel" type="radio" name="responsavel" value="Guilherme" checked><span>Guilherme</span></label><label class="person"><input type="radio" name="responsavel" value="Juliana"><span>Juliana</span></label><label class="person"><input type="radio" name="responsavel" value="Beto"><span>Beto</span></label><label class="person"><input type="radio" name="responsavel" value="Rafael"><span>Rafael</span></label>
           </div></div>
-          <div class="field"><div class="label-row"><label class="label" for="carro">Qual carro?</label></div><select id="carro"><option>Ford Ka</option><option>C3</option></select></div>
+          <div class="field"><div class="label-row"><label class="label" for="carro">Qual veículo?</label></div><select id="carro"><option value="Ford Ka">🚗 Ford Ka</option><option value="C3">🚗 Citroen C3</option><option value="Triumph">🏍️ Triumph</option></select></div>
           <div class="row date-time-row"><div class="date-time-card"><label class="label" for="data">Data</label><input class="input" id="data" type="date" required></div><div class="date-time-card"><label class="label" for="hora">Hora</label><input class="input" id="hora" type="time" required></div></div>
           <div class="record-grid">
             <section class="record-card" aria-labelledby="fuelCardTitle"><div class="record-card-heading"><span class="record-icon" aria-hidden="true">⛽</span><div><h3 id="fuelCardTitle">Registrar abastecimento</h3><p>Quanto colocou e quanto pagou?</p></div></div>
@@ -101,11 +128,11 @@
       </article>
       <article class="panel" id="historico">
         <div class="panel-head"><div><h2 class="panel-title">Histórico</h2><p class="panel-hint">Acompanhe o que aconteceu com os carros.</p></div></div>
-        <div class="history-tools"><select class="filter" id="filterPerson" aria-label="Filtrar por pessoa"><option value="">Todas as pessoas</option><option>Guilherme</option><option>Juliana</option><option>Beto</option><option>Rafael</option></select><select class="filter" id="filterCar" aria-label="Filtrar por carro"><option value="">Todos os carros</option><option>Ford Ka</option><option>C3</option></select><select class="filter" id="filterType" aria-label="Filtrar por tipo"><option value="">Tudo</option><option value="abastecimento">Abastecimentos</option><option value="trajeto">Trajetos</option></select></div>
+        <div class="history-tools"><select class="filter" id="filterPerson" aria-label="Filtrar por pessoa"><option value="">Todas as pessoas</option><option>Guilherme</option><option>Juliana</option><option>Beto</option><option>Rafael</option></select><select class="filter" id="filterCar" aria-label="Filtrar por veículo"><option value="">Todos os veículos</option><option value="Ford Ka">🚗 Ford Ka</option><option value="C3">🚗 Citroen C3</option><option value="Triumph">🏍️ Triumph</option></select><select class="filter" id="filterType" aria-label="Filtrar por tipo"><option value="">Tudo</option><option value="abastecimento">Abastecimentos</option><option value="trajeto">Trajetos</option></select></div>
         <div class="entries" id="entries"></div>
       </article>
     </section>
-    <aside class="notice" id="sharingNotice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg><div><strong>Os dados ficam só neste navegador.</strong> Os celulares da família ainda não sincronizam entre si. O saldo calcula abastecimentos como crédito e desconta trajetos por <b>km ÷ 11 × preço/L</b>. Para compartilhar o mesmo histórico, falta conectar um banco para a família.</div></aside>
+    <aside class="notice" id="sharingNotice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg><div><strong>Histórico compartilhado da família.</strong> Os quatro celulares usam os mesmos registros. Qualquer pessoa com este link pode consultar, incluir e editar lançamentos, sem login; compartilha só com quem deve ter esse acesso. Se ficar sem internet, as mudanças aguardam neste aparelho e sincronizam quando a conexão voltar.</div></aside>
     <details class="howto"><summary>Como usar o painel</summary><ol><li>Escolha a pessoa e o carro.</li><li>Preencha data, hora, pessoa e carro.</li><li>Use o cartão de abastecimento ou o de trajeto e salve separadamente.</li></ol><p>O abastecimento vira crédito da pessoa escolhida. O cartão de trajeto debita <b>km ÷ 11 × preço por litro</b>.</p></details>
     <nav class="mobile-tabs" aria-label="Navegação rápida"><a href="#novo-registro">Registrar</a><a href="#historico">Histórico</a></nav>
   </main>
@@ -114,11 +141,11 @@
       <div class="edit-dialog-head"><div><h2 id="editDialogTitle">Editar lançamento</h2><p>Corrija os dados e salve a atualização.</p></div><button class="edit-close" id="closeEdit" type="button" aria-label="Fechar">×</button></div>
       <div class="row">
         <div class="field"><label class="label" for="editPerson">Quem usou ou abasteceu?</label><select id="editPerson"><option>Guilherme</option><option>Juliana</option><option>Beto</option><option>Rafael</option></select></div>
-        <div class="field"><label class="label" for="editCar">Qual carro?</label><select id="editCar"><option>Ford Ka</option><option>C3</option></select></div>
+        <div class="field"><label class="label" for="editCar">Qual veículo?</label><select id="editCar"><option value="Ford Ka">🚗 Ford Ka</option><option value="C3">🚗 Citroen C3</option><option value="Triumph">🏍️ Triumph</option></select></div>
       </div>
-      <div class="row">
-        <div class="field"><label class="label" for="editDate">Data</label><input class="input" id="editDate" type="date" required></div>
-        <div class="field"><label class="label" for="editTime">Hora</label><input class="input" id="editTime" type="time" required></div>
+      <div class="row date-time-row">
+        <div class="date-time-card"><label class="label" for="editDate">Data</label><input class="input" id="editDate" type="date" required></div>
+        <div class="date-time-card"><label class="label" for="editTime">Hora</label><input class="input" id="editTime" type="time" required></div>
       </div>
       <div class="field"><label class="label" for="editType">Tipo de lançamento</label><select id="editType"><option value="trajeto">Trajeto</option><option value="abastecimento">Abastecimento</option><option value="ambos">Abastecimento e trajeto</option></select></div>
       <div class="edit-fields" id="editFuelFields">
@@ -137,34 +164,62 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script>
     (()=>{
-      const KEY='family-garage-preview-v1',PRICE_KEY='family-garage-preview-price-v1',BASE=6.74,EFFICIENCY=11,PEOPLE=['Guilherme','Juliana','Beto','Rafael'];
-      const form=document.querySelector('#entryForm'),list=document.querySelector('#entries'),toast=document.querySelector('#toast'),priceInput=document.querySelector('#defaultPrice'),entryPrice=document.querySelector('#entryPrice'),fuelPrice=document.querySelector('#fuelPrice');
+      const KEY='family-garage-preview-v1',PRICE_KEY='family-garage-preview-price-v1',PENDING_KEY='family-garage-pending-v1',SETTINGS_PENDING_KEY='family-garage-settings-pending-v1',MIGRATION_KEY='family-garage-shared-migration-v1';
+      const DB_URL='https://gufyfrxctdovmdlpvejy.supabase.co',DB_KEY='sb_publishable_eAsMBVY-6Hm4dRXjmIkMrQ_pgmno4DD',DB_SETTINGS_ID='family';
+      const BASE=6.74,PEOPLE=['Guilherme','Juliana','Beto','Rafael'],VEHICLES={'Ford Ka':{label:'Ford Ka',emoji:'🚗'},C3:{label:'Citroen C3',emoji:'🚗'},Triumph:{label:'Triumph',emoji:'🏍️'}};
+      const form=document.querySelector('#entryForm'),list=document.querySelector('#entries'),toast=document.querySelector('#toast'),priceInput=document.querySelector('#defaultPrice'),entryPrice=document.querySelector('#entryPrice'),fuelPrice=document.querySelector('#fuelPrice'),syncPill=document.querySelector('.sync-pill'),syncLabel=document.querySelector('#syncLabel');
       const photoStatus=document.querySelector('#photoStatus'),photoPreview=document.querySelector('#photoPreview'),photoStatusText=document.querySelector('#photoStatusText'),photoProgress=document.querySelector('#photoProgress');
       const nowLocal=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)};
       const setCurrentDateTime=()=>{const current=nowLocal();document.querySelector('#data').value=current.slice(0,10);document.querySelector('#hora').value=current.slice(11,16)};
       const selectedDateTime=()=>`${document.querySelector('#data').value}T${document.querySelector('#hora').value}`;
       setCurrentDateTime();
-      const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch{return []}};
-      let entries=read();
+      const readJson=(key,fallback)=>{try{const value=JSON.parse(localStorage.getItem(key));return value??fallback}catch{return fallback}};
+      const read=()=>{const value=readJson(KEY,[]);return Array.isArray(value)?value:[]};
+      let entries=read(),pendingEntries=new Map(Object.entries(readJson(PENDING_KEY,{}))),settingsPending=readJson(SETTINGS_PENDING_KEY,false)===true;
+      const storedPrice=Number(localStorage.getItem(PRICE_KEY))||BASE;
+      let settings={price:storedPrice,efficiencies:{'Ford Ka':11,C3:11,Triumph:null},...readJson('family-garage-settings-v1',{})};
+      settings.efficiencies={...{'Ford Ka':11,C3:11,Triumph:null},...(settings.efficiencies||{})};
       const money=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:2}).format(Number(n)||0);
       const num=n=>Number(n)||0;
-      const priceNow=()=>num(priceInput.value)||BASE;
+      const priceNow=()=>num(settings.price)||BASE;
       const dateFmt=v=>new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}).format(new Date(v)).replace('.','');
-      priceInput.value=localStorage.getItem(PRICE_KEY)||String(BASE);entryPrice.value='';fuelPrice.value='';
+      function persistEntries(){localStorage.setItem(KEY,JSON.stringify(entries))}
+      function persistPending(){localStorage.setItem(PENDING_KEY,JSON.stringify(Object.fromEntries(pendingEntries)))}
+      function persistSettings(){localStorage.setItem('family-garage-settings-v1',JSON.stringify(settings));localStorage.setItem(PRICE_KEY,String(settings.price||BASE))}
+      function setSyncState(state,label){syncPill.dataset.state=state;syncLabel.textContent=label}
+      function paintSettings(){priceInput.value=String(settings.price||BASE);document.querySelector('#efficiencyFordKa').value=settings.efficiencies['Ford Ka']??'';document.querySelector('#efficiencyC3').value=settings.efficiencies.C3??'';document.querySelector('#efficiencyTriumph').value=settings.efficiencies.Triumph??''}
+      async function dbRequest(path,options={}){const response=await fetch(`${DB_URL}/rest/v1/${path}`,{...options,headers:{apikey:DB_KEY,Authorization:`Bearer ${DB_KEY}`,Accept:'application/json',...(options.body?{'Content-Type':'application/json'}:{}),...(options.headers||{})}});if(!response.ok){const detail=await response.text().catch(()=>response.statusText);throw new Error(`Banco indisponível (${response.status}): ${detail.slice(0,180)}`)}if(response.status===204)return null;const text=await response.text();return text?JSON.parse(text):null}
+      const getRemoteEntries=()=>dbRequest('family_entries?select=id,data,updated_at&order=updated_at.asc');
+      const getRemoteSettings=()=>dbRequest(`family_settings?select=id,data,updated_at&id=eq.${encodeURIComponent(DB_SETTINGS_ID)}&limit=1`);
+      async function putEntries(values){if(!values.length)return;const rows=values.map(entry=>({id:String(entry.id),data:entry,updated_at:entry.updated_at||new Date().toISOString()}));await dbRequest('family_entries?on_conflict=id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(rows)})}
+      async function putSettings(){await dbRequest('family_settings?on_conflict=id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify([{id:DB_SETTINGS_ID,data:settings,updated_at:new Date().toISOString()}])})}
+      let syncRunning=false,syncAgain=false;
+      async function syncRemote(){if(syncRunning){syncAgain=true;return}syncRunning=true;setSyncState('syncing','Sincronizando…');try{
+        let remoteRows=await getRemoteEntries();const remoteIds=new Set(remoteRows.map(row=>String(row.id)));
+        if(localStorage.getItem(MIGRATION_KEY)!=='1'){const legacy=entries.filter(entry=>!remoteIds.has(String(entry.id)));if(legacy.length){const stamped=legacy.map(entry=>({...entry,updated_at:entry.updated_at||new Date().toISOString()}));await putEntries(stamped)}localStorage.setItem(MIGRATION_KEY,'1');remoteRows=await getRemoteEntries()}
+        if(pendingEntries.size){const batch=[...pendingEntries.entries()];await putEntries(batch.map(([,entry])=>({...entry,updated_at:entry.updated_at||new Date().toISOString()})));for(const [id,sent] of batch){if(pendingEntries.get(id)===sent)pendingEntries.delete(id)}persistPending();remoteRows=await getRemoteEntries()}
+        const merged=new Map(remoteRows.map(row=>[String(row.id),row.data]));for(const [id,entry] of pendingEntries)merged.set(String(id),entry);entries=[...merged.values()].filter(entry=>entry&&entry.id);persistEntries();
+        const remoteSettings=await getRemoteSettings();if(settingsPending){await putSettings();settingsPending=false;localStorage.setItem(SETTINGS_PENDING_KEY,'false');const saved=await getRemoteSettings();if(saved?.length)settings=saved[0].data}else if(remoteSettings?.length){settings=remoteSettings[0].data}else{await putSettings();const seeded=await getRemoteSettings();if(seeded?.length)settings=seeded[0].data}
+        settings.efficiencies={...{'Ford Ka':11,C3:11,Triumph:null},...(settings.efficiencies||{})};if(!num(settings.price))settings.price=BASE;persistSettings();paintSettings();setSyncState('online','Compartilhado');render();
+      }catch(error){console.warn('Family Garage sync:',error);setSyncState('offline','Offline · salvo aqui')}finally{syncRunning=false;if(syncAgain){syncAgain=false;syncRemote()}}}
+      function queueEntry(entry){entry.updated_at=new Date().toISOString();pendingEntries.set(String(entry.id),entry);persistPending();persistEntries();syncRemote()}
+      function queueSettings(){settingsPending=true;localStorage.setItem(SETTINGS_PENDING_KEY,'true');persistSettings();render();syncRemote()}
+      window.addEventListener('online',syncRemote);window.addEventListener('offline',()=>setSyncState('offline','Offline · salvo aqui'));
+      paintSettings();entryPrice.value='';fuelPrice.value='';
       function distanceFor(e){if(num(e.distancia)>0)return num(e.distancia);if(!num(e.odometro))return null;const previous=entries.filter(x=>x.id!==e.id&&x.carro===e.carro&&x.data<=e.data&&num(x.odometro)>0).sort((a,b)=>b.data.localeCompare(a.data)||entries.indexOf(b)-entries.indexOf(a))[0];if(!previous)return null;const delta=num(e.odometro)-num(previous.odometro);return delta>=0?delta:null}
-      function valuesFor(e){let credit=0,debit=0,dist=null;const price=num(e.price)||priceNow();if(e.tipo!=='trajeto'){credit=num(e.valor)>0?num(e.valor):num(e.litros)*price}if(e.tipo!=='abastecimento'){dist=distanceFor(e);if(dist!==null)debit=(dist/EFFICIENCY)*price}return{credit,debit,dist,price}}
+      function valuesFor(e){let credit=0,debit=0,dist=null;const price=num(e.price)||priceNow(),efficiency=num(settings.efficiencies[e.carro]);if(e.tipo!=='trajeto'){credit=num(e.valor)>0?num(e.valor):num(e.litros)*price}if(e.tipo!=='abastecimento'){dist=distanceFor(e);if(dist!==null&&efficiency>0)debit=(dist/efficiency)*price}return{credit,debit,dist,price,efficiency:efficiency||null}}
       const icon=kind=>kind==='trajeto'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h2a4 4 0 0 0 4-4v-4a4 4 0 0 1 4-4"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16M3 21h14m-9-4h4M7 7h6v5H7zM16 8h2l2 2v7a2 2 0 0 1-4 0v-4"/></svg>';
       function render(){
         const month=new Date().toISOString().slice(0,7),monthly=entries.filter(e=>e.data.slice(0,7)===month),monthlyValues=monthly.map(valuesFor);
         document.querySelector('#statLiters').textContent=`${monthly.reduce((a,e)=>a+num(e.litros),0).toLocaleString('pt-BR',{maximumFractionDigits:1})} L`;
         document.querySelector('#statCost').textContent=money(monthlyValues.reduce((a,v)=>a+v.credit,0));
         document.querySelector('#statUsage').textContent=money(monthlyValues.reduce((a,v)=>a+v.debit,0));
-        document.querySelector('#balanceCards').innerHTML=PEOPLE.map(name=>{const own=entries.filter(e=>e.responsavel===name).map(valuesFor),credit=own.reduce((a,v)=>a+v.credit,0),debit=own.reduce((a,v)=>a+v.debit,0),balance=credit-debit;return `<article class="balance-card"><div class="balance-person">${name}</div><div class="balance-total ${balance<0?'balance-negative':''}">${money(balance)}</div><div class="balance-parts"><span>Créditos<b>${money(credit)}</b></span><span>Consumo<b>${money(debit)}</b></span></div><a class="balance-link" href="#historico" data-person-link="${name}">Ver lançamentos ↗</a></article>`}).join('');
+        document.querySelector('#balanceCards').innerHTML=PEOPLE.map(name=>{const ownEntries=entries.filter(e=>e.responsavel===name),own=ownEntries.map(valuesFor),credit=own.reduce((a,v)=>a+v.credit,0),debit=own.reduce((a,v)=>a+v.debit,0),pending=ownEntries.filter((e,i)=>e.tipo!=='abastecimento'&&own[i].dist!==null&&!own[i].efficiency).length,balance=credit-debit;return `<article class="balance-card"><div class="balance-person">${name}</div><div class="balance-total ${balance<0?'balance-negative':''}">${money(balance)}</div><div class="balance-parts"><span>Créditos<b>${money(credit)}</b></span><span>Consumo<b>${money(debit)}</b></span></div>${pending?`<div class="pending-trip">${pending} trajeto(s) aguardando km/L</div>`:''}<a class="balance-link" href="#historico" data-person-link="${name}">Ver lançamentos ↗</a></article>`}).join('');
         const person=document.querySelector('#filterPerson').value,car=document.querySelector('#filterCar').value,type=document.querySelector('#filterType').value;
         const shown=entries.filter(e=>(!person||e.responsavel===person)&&(!car||e.carro===car)&&(!type||(type==='abastecimento'?e.tipo!=='trajeto':e.tipo!=='abastecimento'))).sort((a,b)=>b.data.localeCompare(a.data));
         if(!shown.length){list.innerHTML=`<div class="empty"><div class="empty-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 13h18l-1.6-5.3a2 2 0 0 0-1.9-1.4H6.5a2 2 0 0 0-1.9 1.4L3 13Zm2 0v5m14-5v5M5 16h14"/><circle cx="7.5" cy="14.5" r=".8" fill="currentColor"/><circle cx="16.5" cy="14.5" r=".8" fill="currentColor"/></svg></div><h3>${entries.length?'Nada por aqui com esses filtros':'A garagem começa com vocês'}</h3><p>${entries.length?'Tenta mudar os filtros pra ver outros registros.':'Quando alguém registrar um abastecimento ou trajeto, ele aparece aqui.'}</p></div>`;return}
-        list.innerHTML=shown.map(e=>{const v=valuesFor(e),label=e.tipo==='ambos'?'Abastecimento e trajeto':e.tipo==='trajeto'?'Trajeto':'Abastecimento',details=[];if(e.litros)details.push(`${num(e.litros).toLocaleString('pt-BR')} L`);if(e.odometro)details.push(`odômetro ${num(e.odometro).toLocaleString('pt-BR')} km`);if(e.observacoes)details.push(escapeHtml(e.observacoes));let value='',sub='';if(e.tipo==='abastecimento'){value=`<span class="credit">+ ${money(v.credit)}</span>`;sub=`${details.join(' · ')||'crédito de abastecimento'} · ${money(v.price)}/L`}else if(e.tipo==='trajeto'){value=v.dist===null?'—':`<span class="debit">− ${money(v.debit)}</span>`;sub=v.dist===null?'primeiro odômetro; aguardando próxima leitura':`${v.dist.toLocaleString('pt-BR')} km · ${money(v.price)}/L`}else{value=`<span class="credit">+ ${money(v.credit)}</span>`;sub=`crédito; débito do trajeto: ${v.dist===null?'sem distância calculada':`− ${money(v.debit)} (${v.dist.toLocaleString('pt-BR')} km)`}`}
-          return `<div class="entry"><div class="entry-icon ${e.tipo==='trajeto'?'trip':''}">${icon(e.tipo)}</div><div><div class="entry-name">${escapeHtml(e.responsavel)} · ${escapeHtml(e.carro)}</div><div class="entry-meta">${label} · ${dateFmt(e.data)}${details.length?' · '+details.join(' · '):''}</div></div><div class="entry-value">${value}<small class="entry-detail">${sub}</small><button class="entry-edit" type="button" data-edit-index="${entries.indexOf(e)}">Editar</button></div></div>`}).join('');
+        list.innerHTML=shown.map(e=>{const v=valuesFor(e),vehicle=VEHICLES[e.carro]||{label:e.carro,emoji:'🚗'},label=e.tipo==='ambos'?'Abastecimento e trajeto':e.tipo==='trajeto'?'Trajeto':'Abastecimento',details=[];if(e.litros)details.push(`${num(e.litros).toLocaleString('pt-BR')} L`);if(e.odometro)details.push(`odômetro ${num(e.odometro).toLocaleString('pt-BR')} km`);if(e.observacoes)details.push(escapeHtml(e.observacoes));let value='',sub='';if(e.tipo==='abastecimento'){value=`<span class="credit">+ ${money(v.credit)}</span>`;sub=`${details.join(' · ')||'crédito de abastecimento'} · ${money(v.price)}/L`}else if(e.tipo==='trajeto'){value=v.dist===null?'—':v.efficiency?`<span class="debit">− ${money(v.debit)}</span>`:'—';sub=v.dist===null?'primeiro odômetro; aguardando próxima leitura':`${v.dist.toLocaleString('pt-BR')} km · ${v.efficiency?`${money(v.price)}/L`:'consumo pendente: defina km/L'}`}else{value=`<span class="credit">+ ${money(v.credit)}</span>`;sub=`crédito; débito do trajeto: ${v.dist===null?'sem distância calculada':v.efficiency?`− ${money(v.debit)} (${v.dist.toLocaleString('pt-BR')} km)`:`${v.dist.toLocaleString('pt-BR')} km · consumo pendente`}`}
+          return `<div class="entry"><div class="entry-icon ${e.tipo==='trajeto'?'trip':''}">${icon(e.tipo)}</div><div><div class="entry-name">${vehicle.emoji} ${escapeHtml(vehicle.label)} · ${escapeHtml(e.responsavel)}</div><div class="entry-meta">${label} · ${dateFmt(e.data)}${details.length?' · '+details.join(' · '):''}</div></div><div class="entry-value">${value}<small class="entry-detail">${sub}</small><button class="entry-edit" type="button" data-edit-index="${entries.indexOf(e)}">Editar</button></div></div>`}).join('');
         document.querySelectorAll('[data-person-link]').forEach(a=>a.addEventListener('click',()=>{document.querySelector('#filterPerson').value=a.dataset.personLink;render()}));
       }
       function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -201,16 +256,17 @@
         const liters=document.querySelector('#editLiters').value,amount=document.querySelector('#editAmount').value,distance=document.querySelector('#editDistance').value,odometer=document.querySelector('#editOdometer').value;
         if(kind==='abastecimento'&&!liters&&!amount){toastMsg('Informe os litros ou o valor pago.');return}if(kind==='trajeto'&&!distance&&!odometer){toastMsg('Informe a distância ou o km do painel.');return}if(kind==='ambos'&&!liters&&!amount&&!distance&&!odometer){toastMsg('Informe algum dado do abastecimento ou do trajeto.');return}
         Object.assign(entry,{responsavel:document.querySelector('#editPerson').value,carro:document.querySelector('#editCar').value,data:`${document.querySelector('#editDate').value}T${document.querySelector('#editTime').value}`,tipo:kind,litros:hasFuel?liters:'',valor:hasFuel?amount:'',distancia:hasTrip?distance:'',odometro:hasTrip?odometer:'',price:num(document.querySelector('#editPrice').value)||priceNow(),observacoes:document.querySelector('#editNotes').value.trim()});
-        localStorage.setItem(KEY,JSON.stringify(entries));editDialog.close();render();toastMsg('Lançamento atualizado.')});
+        queueEntry(entry);editDialog.close();render();toastMsg('Alteração salva aqui; sincronizando com a família…')});
       document.querySelectorAll('[data-photo-kind]').forEach(button=>button.addEventListener('click',()=>document.querySelector(button.dataset.photoKind==='receipt'?'#receiptPhoto':'#odometerPhoto').click()));
       document.querySelector('#receiptPhoto').addEventListener('change',ev=>{if(ev.target.files?.[0])scanPhoto(ev.target.files[0],'receipt');ev.target.value=''})
       document.querySelector('#odometerPhoto').addEventListener('change',ev=>{if(ev.target.files?.[0])scanPhoto(ev.target.files[0],'odometer');ev.target.value=''})
-      priceInput.addEventListener('change',()=>{localStorage.setItem(PRICE_KEY,priceInput.value||String(BASE));render();toastMsg('Preço de referência atualizado neste aparelho.')});
+      priceInput.addEventListener('change',()=>{settings.price=num(priceInput.value)||BASE;priceInput.value=String(settings.price);queueSettings();toastMsg('Preço salvo aqui; sincronizando com a família…')});
+      [['#efficiencyFordKa','Ford Ka'],['#efficiencyC3','C3'],['#efficiencyTriumph','Triumph']].forEach(([selector,key])=>document.querySelector(selector).addEventListener('change',ev=>{settings.efficiencies[key]=num(ev.target.value)||null;ev.target.value=settings.efficiencies[key]??'';queueSettings();toastMsg('Consumo salvo aqui; sincronizando com a família…') }));
       ['#filterPerson','#filterCar','#filterType'].forEach(sel=>document.querySelector(sel).addEventListener('change',render));
       form.addEventListener('submit',ev=>{ev.preventDefault();const tipo=ev.submitter?.dataset.saveKind;if(!tipo)return;const litros=document.querySelector('#litros').value,valor=document.querySelector('#valor').value,odometro=document.querySelector('#odometro').value,distancia=document.querySelector('#distancia').value;const price=tipo==='trajeto'?(num(entryPrice.value)||priceNow()):(num(fuelPrice.value)||priceNow());if(tipo==='abastecimento'&&!litros&&!valor){toastMsg('Informe os litros ou o valor pago.');return}if(tipo==='trajeto'&&!odometro&&!distancia){toastMsg('Informe a distância rodada ou o km do painel.');return}
-        const responsavel=new FormData(form).get('responsavel');entries.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),responsavel,carro:document.querySelector('#carro').value,data:selectedDateTime(),tipo,litros:tipo==='trajeto'?'':litros,valor:tipo==='trajeto'?'':valor,odometro:tipo==='abastecimento'?'':odometro,distancia:tipo==='abastecimento'?'':distancia,price,observacoes:document.querySelector('#observacoes').value.trim()});localStorage.setItem(KEY,JSON.stringify(entries));if(tipo==='abastecimento'){document.querySelector('#litros').value='';document.querySelector('#valor').value='';fuelPrice.value=''}else{document.querySelector('#odometro').value='';document.querySelector('#distancia').value='';entryPrice.value=''}document.querySelector('#observacoes').value='';document.querySelectorAll('.autofilled').forEach(el=>el.classList.remove('autofilled'));render();toastMsg(tipo==='abastecimento'?'Abastecimento salvo neste aparelho.':'Trajeto salvo neste aparelho.')});
-      document.querySelector('#shareLink').addEventListener('click',async ev=>{ev.preventDefault();try{await navigator.clipboard.writeText(location.href);toastMsg('Link copiado. Os registros ainda ficam só neste aparelho.')}catch{toastMsg('Usa o menu do navegador pra copiar o link.')}});
-      render();
+        const responsavel=new FormData(form).get('responsavel'),entry={id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),responsavel,carro:document.querySelector('#carro').value,data:selectedDateTime(),tipo,litros:tipo==='trajeto'?'':litros,valor:tipo==='trajeto'?'':valor,odometro:tipo==='abastecimento'?'':odometro,distancia:tipo==='abastecimento'?'':distancia,price,observacoes:document.querySelector('#observacoes').value.trim()};entries.push(entry);queueEntry(entry);if(tipo==='abastecimento'){document.querySelector('#litros').value='';document.querySelector('#valor').value='';fuelPrice.value=''}else{document.querySelector('#odometro').value='';document.querySelector('#distancia').value='';entryPrice.value=''}document.querySelector('#observacoes').value='';document.querySelectorAll('.autofilled').forEach(el=>el.classList.remove('autofilled'));render();toastMsg(tipo==='abastecimento'?'Abastecimento salvo aqui; sincronizando com a família…':'Trajeto salvo aqui; sincronizando com a família…')});
+      document.querySelector('#shareLink').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(location.href);toastMsg('Link copiado. Quem receber pode ver e editar o histórico.')}catch{toastMsg('Usa o menu do navegador pra copiar o link.')}});
+      render();syncRemote();setInterval(syncRemote,15000);
     })();
   </script>
 </body>
